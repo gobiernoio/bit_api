@@ -2,8 +2,10 @@ import * as functions from 'firebase-functions';
 import * as firebase from "firebase-admin";
 import express = require('express');
 import bodyParser = require('body-parser');
+var cors = require('cors');
 
 const app: express.Application = express();
+app.use(cors({origin: '*'}));
 
 // ========================================================================
 //  Configuración de conexión a la realtime database de firebase
@@ -38,9 +40,9 @@ app.get('/', function (req, res) {
 //  POST, recibe objeto JSON y almacena en firebase
 // ========================================================================
 app.post('/POST/NutriNET/Cliente/', function (req, res) {
-    const id = firebase.database().ref().push().key;
-    req.body.id = id;
-    const ref = firebaseApp.database().ref(`/clientes/${id}`).set(req.body)
+    const key = firebase.database().ref().push().key;
+    req.body.key = key;
+    const ref = firebaseApp.database().ref(`/clientes/${key}`).set(req.body)
     
 
 	if (req.body) {
@@ -68,12 +70,11 @@ app.post('/POST/NutriNET/Cliente/', function (req, res) {
 // ========================================================================
 //  GET, recibe una key y retorna un json con el objeto dentro de dicha Key
 // ========================================================================
-app.get('/GET/NutriNET/Cliente/:id', function (req: any, res) {
-	const id = req.params.id;
-	console.log("EL id es " + id)
-	const ref = firebaseApp.database().ref(`/clientes/${id}`)
+app.get('/GET/NutriNET/Cliente/:key', function (req: any, res) {
+	const key = req.params.key;
+	const ref = firebaseApp.database().ref(`/clientes/${key}`)
 
-	if (id) {
+	if (key) {
 		ref.on('value', snapshot => {
 			res.status(200).json(snapshot)
 
@@ -92,11 +93,29 @@ app.get('/GET/NutriNET/Cliente/:id', function (req: any, res) {
 
 
 // ========================================================================
+//  GET, trae todos los registros
+// ========================================================================
+app.get('/GET/NutriNET/Clientes', function (req: any, res) {
+	
+	const ref = firebaseApp.database().ref(`/clientes/`)
+	
+	ref.on('value', snapshot => {
+		res.status(200).json(snapshot)
+
+		res.json({
+			snapshot
+		});
+	})
+})
+
+
+
+// ========================================================================
 //  PUT, actualiza el objeto recibido, el objeto contiene en el cuerpo la key que se actualiza
 // ========================================================================
-app.put('/POST/NutriNET/Cliente/', function (req, res) {
+app.put('/PUT/NutriNET/Cliente/', function (req, res) {
     
-	const ref = firebaseApp.database().ref(`/clientes/${req.body.id}`).set(req.body)
+	const ref = firebaseApp.database().ref(`/clientes/${req.body.key}`).set(req.body)
 
 	if (req.body) {
 		ref.then(respuesta => {
